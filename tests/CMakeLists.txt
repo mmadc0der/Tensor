@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
+find_package(Threads REQUIRED)
 
 if (TENSOR_ENABLE_TESTS)
     add_executable(tensor_tests
@@ -10,6 +11,7 @@ if (TENSOR_ENABLE_TESTS)
         tensor
         GTest::gtest
         GTest::gtest_main
+        Threads::Threads
     )
     if (MSVC)
         target_compile_options(tensor_tests PRIVATE /W4 /permissive- /EHsc)
@@ -25,7 +27,7 @@ if (TENSOR_ENABLE_BENCHMARKS)
     add_executable(tensor_bench
         bench/tensor_bench.cpp
     )
-    target_link_libraries(tensor_bench PRIVATE tensor benchmark::benchmark)
+    target_link_libraries(tensor_bench PRIVATE tensor benchmark::benchmark Threads::Threads)
     if (MSVC)
         target_compile_options(tensor_bench PRIVATE /W4 /permissive- /EHsc)
     else()

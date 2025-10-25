@@ -1,0 +1,98 @@
+{
+  "version": 4,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "gcc-debug",
+      "displayName": "GCC Debug (Ninja)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "gcc-release",
+      "displayName": "GCC Release (Ninja)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "clang-debug",
+      "displayName": "Clang Debug (Ninja)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "clang-release",
+      "displayName": "Clang Release (Ninja)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "gcc-release-tests",
+      "displayName": "GCC Release + Tests (Ninja)",
+      "inherits": "gcc-release",
+      "cacheVariables": {
+        "TENSOR_ENABLE_TESTS": "ON"
+      }
+    },
+    {
+      "name": "clang-release-tests",
+      "displayName": "Clang Release + Tests (Ninja)",
+      "inherits": "clang-release",
+      "cacheVariables": {
+        "TENSOR_ENABLE_TESTS": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "build-gcc-debug", "configurePreset": "gcc-debug", "jobs": 8 },
+    { "name": "build-gcc-release", "configurePreset": "gcc-release", "jobs": 8 },
+    { "name": "build-clang-debug", "configurePreset": "clang-debug", "jobs": 8 },
+    { "name": "build-clang-release", "configurePreset": "clang-release", "jobs": 8 },
+    { "name": "build-gcc-release-tests", "configurePreset": "gcc-release-tests", "jobs": 8 },
+    { "name": "build-clang-release-tests", "configurePreset": "clang-release-tests", "jobs": 8 }
+  ],
+  "testPresets": [
+    {
+      "name": "test-gcc-release",
+      "configurePreset": "gcc-release-tests",
+      "output": { "outputOnFailure": true },
+      "filter": {
+        "include": { "label": "unit" }
+      }
+    },
+    {
+      "name": "test-clang-release",
+      "configurePreset": "clang-release-tests",
+      "output": { "outputOnFailure": true },
+      "filter": {
+        "include": { "label": "unit" }
+      }
+    }
+  ]
+}
+
+
