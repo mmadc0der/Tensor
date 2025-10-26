@@ -2,14 +2,22 @@
 
 A simple tensor library for deep learning workloads.
 
+## Prerequisites
+
+- CMake 3.20+
+- Ninja
+- GCC (recommended): GCC 11+ (tested with MinGW-w64 on Windows)
+- Python 3.11/3.12 (Interpreter + Development headers)
+- Optional: GoogleTest (comes as submodule), pybind11 (submodule or fetched)
+
 ## Build
 
 ```
-# Recommended: use CMakePresets with Ninja + GCC/Clang
+# Recommended: use CMakePresets with Ninja + GCC
 cmake --preset gcc-release
 cmake --build --preset build-gcc-release
 
-# or Clang
+# Clang (experimental; unsupported on Windows MinGW for Python bindings)
 cmake --preset clang-release
 cmake --build --preset build-clang-release
 ```
@@ -42,14 +50,33 @@ cmake --build build --target tensor_bench
 ## Python module and pytest
 
 ```
-# Build Python extension and run pytest
+# Build Python extension and run pytest (GCC)
 cmake --preset gcc-release-pytest
 cmake --build --preset build-gcc-release-pytest --target tensor_py
 ctest --preset pytest-gcc-release
 ```
 
+### Running pytest manually
+
+From `python/` directory, a locally built module is auto-discovered by `tests/conftest.py`.
+
+```
+python -m pytest -q
+```
+
+Built artifact location (for reference): `build/<preset>/src/python/tensor_py.*.pyd` (Windows) or `.so` (Linux).
+
 ## Windows
 
-- Use Clang or GCC via MSYS2/WSL with Ninja generator.
-- MSVC and MinGW toolchains are not required; prefer Clang/LLD or GCC.
+- Recommended toolchain: GCC via MSYS2 MinGW-w64 + Ninja.
+- The Python extension links libstdc++/libgcc statically under GCC to avoid missing DLLs.
+- PyTest via CTest sets `PYTHONPATH` and augments `PATH` so the module and runtime DLLs are discoverable.
+- Clang with MinGW on Windows is currently unsupported for the Python binding due to libstdc++/winpthread link issues. Use GCC or WSL.
 - On WSL, run the same Linux commands above.
+
+## Troubleshooting
+
+- ImportError: DLL load failed when importing `tensor_py` on Windows
+  - Ensure you built with the GCC presets above.
+  - Run tests via `ctest --preset pytest-gcc-release` or from `python/` directory (`conftest.py` adjusts paths automatically).
+  - If running Python outside CTest and `python/`, add `build/<preset>/src/python` to `PYTHONPATH`.
