@@ -24,7 +24,7 @@ def test_zeros_ones_parity(shape, dtype):
 @pytest.mark.benchmark(group="zeros")
 @pytest.mark.parametrize("n", [64, 256, 1024])
 @pytest.mark.parametrize("dtype", ["f32"])  # extend as supported
-def test_bench_zeros_numpy(torch, benchmark, n, dtype):
+def test_bench_zeros_numpy(benchmark, n, dtype):
     shape = [n, n]
     # our
     def ours():

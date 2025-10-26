@@ -65,6 +65,40 @@
       "cacheVariables": {
         "TENSOR_ENABLE_TESTS": "ON"
       }
+    },
+    {
+      "name": "gcc-release-python",
+      "displayName": "GCC Release + Python (Ninja)",
+      "inherits": "gcc-release",
+      "cacheVariables": {
+        "TENSOR_ENABLE_PYTHON": "ON"
+      }
+    },
+    {
+      "name": "clang-release-python",
+      "displayName": "Clang Release + Python (Ninja)",
+      "inherits": "clang-release",
+      "cacheVariables": {
+        "TENSOR_ENABLE_PYTHON": "ON"
+      }
+    },
+    {
+      "name": "gcc-release-pytest",
+      "displayName": "GCC Release + Python + PyTest (Ninja)",
+      "inherits": "gcc-release",
+      "cacheVariables": {
+        "TENSOR_ENABLE_PYTHON": "ON",
+        "TENSOR_ENABLE_PYTEST": "ON"
+      }
+    },
+    {
+      "name": "clang-release-pytest",
+      "displayName": "Clang Release + Python + PyTest (Ninja)",
+      "inherits": "clang-release",
+      "cacheVariables": {
+        "TENSOR_ENABLE_PYTHON": "ON",
+        "TENSOR_ENABLE_PYTEST": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -73,7 +107,11 @@
     { "name": "build-clang-debug", "configurePreset": "clang-debug", "jobs": 8 },
     { "name": "build-clang-release", "configurePreset": "clang-release", "jobs": 8 },
     { "name": "build-gcc-release-tests", "configurePreset": "gcc-release-tests", "jobs": 8 },
-    { "name": "build-clang-release-tests", "configurePreset": "clang-release-tests", "jobs": 8 }
+    { "name": "build-clang-release-tests", "configurePreset": "clang-release-tests", "jobs": 8 },
+    { "name": "build-gcc-release-python", "configurePreset": "gcc-release-python", "jobs": 8 },
+    { "name": "build-clang-release-python", "configurePreset": "clang-release-python", "jobs": 8 },
+    { "name": "build-gcc-release-pytest", "configurePreset": "gcc-release-pytest", "jobs": 8 },
+    { "name": "build-clang-release-pytest", "configurePreset": "clang-release-pytest", "jobs": 8 }
   ],
   "testPresets": [
     {
@@ -91,6 +129,16 @@
       "filter": {
         "include": { "label": "unit" }
       }
+    },
+    {
+      "name": "pytest-gcc-release",
+      "configurePreset": "gcc-release-pytest",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "pytest-clang-release",
+      "configurePreset": "clang-release-pytest",
+      "output": { "outputOnFailure": true }
     }
   ]
 }

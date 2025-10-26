@@ -1,0 +1,7 @@
+numpy>=1.26
+pytest>=7.4
+pytest-benchmark>=4.0
+packaging>=23.0
+
+# Optional: uncomment to compare with PyTorch (large download)
+torch>=2.9

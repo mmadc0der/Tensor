@@ -5,8 +5,13 @@ A simple tensor library for deep learning workloads.
 ## Build
 
 ```
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build
+# Recommended: use CMakePresets with Ninja + GCC/Clang
+cmake --preset gcc-release
+cmake --build --preset build-gcc-release
+
+# or Clang
+cmake --preset clang-release
+cmake --build --preset build-clang-release
 ```
 
 ## Options
@@ -21,9 +26,9 @@ cmake --build build
 ## Unit tests
 
 ```
-cmake -S . -B build -DTENSOR_ENABLE_TESTS=ON
-cmake --build build
-ctest --test-dir build -L unit -j
+cmake --preset gcc-release-tests
+cmake --build --preset build-gcc-release-tests
+ctest --preset test-gcc-release -j
 ```
 
 ## Benchmarks
@@ -37,7 +42,14 @@ cmake --build build --target tensor_bench
 ## Python module and pytest
 
 ```
-cmake -S . -B build -DTENSOR_ENABLE_PYTHON=ON -DTENSOR_ENABLE_PYTEST=ON
-cmake --build build --target tensor_py
-cmake --build build --target pytest
+# Build Python extension and run pytest
+cmake --preset gcc-release-pytest
+cmake --build --preset build-gcc-release-pytest --target tensor_py
+ctest --preset pytest-gcc-release
 ```
+
+## Windows
+
+- Use Clang or GCC via MSYS2/WSL with Ninja generator.
+- MSVC and MinGW toolchains are not required; prefer Clang/LLD or GCC.
+- On WSL, run the same Linux commands above.
