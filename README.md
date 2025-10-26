@@ -42,9 +42,9 @@ ctest --preset test-gcc-release -j
 ## Benchmarks
 
 ```
-cmake -S . -B build -DTENSOR_ENABLE_BENCHMARKS=ON -DCMAKE_BUILD_TYPE=Release
-cmake --build build --target tensor_bench
-./build/tensor_bench
+cmake --preset gcc-release -DTENSOR_ENABLE_BENCHMARKS=ON
+cmake --build --preset build-gcc-release -DTENSOR_ENABLE_BENCHMARKS=ON
+./build/gcc-release/tensor_bench
 ```
 
 ## Python module and pytest
@@ -65,6 +65,30 @@ python -m pytest -q
 ```
 
 Built artifact location (for reference): `build/<preset>/src/python/tensor_py.*.pyd` (Windows) or `.so` (Linux).
+
+### Benchmarks (pytest)
+
+Run only benchmark tests and sort by mean (recommended view):
+
+```
+python -m pytest -q -k bench --benchmark-sort=mean
+```
+
+Optional, add compact names and useful columns:
+
+```
+python -m pytest -q -k bench \
+  --benchmark-name=short \
+  --benchmark-columns=median,min,max,mean,stddev \
+  --benchmark-sort=mean
+```
+
+Save and compare benchmark runs:
+
+```
+python -m pytest -q -k bench --benchmark-save=gcc
+python -m pytest -q -k bench --benchmark-compare --benchmark-compare-fail=mean:5%
+```
 
 ## Windows
 
