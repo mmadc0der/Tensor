@@ -12,7 +12,7 @@ A simple tensor library for deep learning workloads.
 
 ## Build
 
-```
+```bash
 # Recommended: use CMakePresets with Ninja + GCC
 cmake --preset gcc-release
 cmake --build --preset build-gcc-release
@@ -24,7 +24,7 @@ cmake --build --preset build-clang-release
 
 ## Options
 
-```
+```bash
 -DTENSOR_ENABLE_TESTS=ON        # GoogleTest unit tests (ctest -L unit)
 -DTENSOR_ENABLE_BENCHMARKS=ON   # Google Benchmark (run tensor_bench)
 -DTENSOR_ENABLE_PYTHON=ON       # Build pybind11 module tensor_py
@@ -33,7 +33,7 @@ cmake --build --preset build-clang-release
 
 ## Unit tests
 
-```
+```bash
 cmake --preset gcc-release-tests
 cmake --build --preset build-gcc-release-tests
 ctest --preset test-gcc-release -j
@@ -41,7 +41,7 @@ ctest --preset test-gcc-release -j
 
 ## Benchmarks
 
-```
+```bash
 cmake --preset gcc-release -DTENSOR_ENABLE_BENCHMARKS=ON
 cmake --build --preset build-gcc-release -DTENSOR_ENABLE_BENCHMARKS=ON
 ./build/gcc-release/tensor_bench
@@ -49,7 +49,7 @@ cmake --build --preset build-gcc-release -DTENSOR_ENABLE_BENCHMARKS=ON
 
 ## Python module and pytest
 
-```
+```bash
 # Build Python extension and run pytest (GCC)
 cmake --preset gcc-release-pytest
 cmake --build --preset build-gcc-release-pytest --target tensor_py
@@ -60,7 +60,7 @@ ctest --preset pytest-gcc-release
 
 From `python/` directory, a locally built module is auto-discovered by `tests/conftest.py`.
 
-```
+```bash
 python -m pytest -q
 ```
 
@@ -70,13 +70,13 @@ Built artifact location (for reference): `build/<preset>/src/python/tensor_py.*.
 
 Run only benchmark tests and sort by mean (recommended view):
 
-```
+```bash
 python -m pytest -q -k bench --benchmark-sort=mean
 ```
 
 Optional, add compact names and useful columns:
 
-```
+```bash
 python -m pytest -q -k bench \
   --benchmark-name=short \
   --benchmark-columns=median,min,max,mean,stddev \
@@ -85,7 +85,7 @@ python -m pytest -q -k bench \
 
 Save and compare benchmark runs:
 
-```
+```bash
 python -m pytest -q -k bench --benchmark-save=gcc
 python -m pytest -q -k bench --benchmark-compare --benchmark-compare-fail=mean:5%
 ```
