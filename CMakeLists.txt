@@ -104,7 +104,7 @@ if (TENSOR_ENABLE_PYTEST)
 
     add_custom_target(pytest
         COMMAND ${CMAKE_COMMAND} -E env
-            "PYTHONPATH=$$<TARGET_FILE_DIR:tensor_py>"
+            PYTHONPATH=$<TARGET_FILE_DIR:tensor_py>
             ${_PYTEST_ENV_EXTRA}
             ${Python3_EXECUTABLE} -m pytest -q
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/python
