@@ -1,18 +1,16 @@
-# 3rd-party
-/external/**/*
-
 # Build
 /build*/**/*
 .cache
 *.exe
+.ninja_deps
+.ninja_log
+compile_commands.json
+CMakeCache.txt
+CMakeFiles/
+Testing/
+CMakeUserPresets.json
 
 # Python
 __pycache__
-*.pyc
-*.pyo
-*.pyd
-*.pyw
-*.pyz
-*.pywz
-*.pyzw
-*.pyzwz
+.pytest_cache
+.venv
