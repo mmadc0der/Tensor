@@ -6,6 +6,9 @@ if (TENSOR_ENABLE_TESTS)
         unit/tensor_core_test.cpp
         unit/api_factories_test.cpp
         unit/views_test.cpp
+        unit/ops_forward_test.cpp
+        unit/autograd_test.cpp
+        unit/linear_test.cpp
     )
     target_link_libraries(tensor_tests PRIVATE
         tensor

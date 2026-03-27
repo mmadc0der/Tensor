@@ -39,7 +39,7 @@ def _maybe_add_built_module_to_path():
         except OSError:
             continue
 
-    # 2) Fallback: recursive search (handles typical CMake layout build/<preset>/src/python)
+    # 2) Fallback: recursive search (handles typical CMake layout build/<preset>/python)
     if os.path.isdir(build_dir):
         for root, _dirs, files in os.walk(build_dir):
             for f in files:

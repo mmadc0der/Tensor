@@ -1,37 +1,122 @@
 # **Tensor**
 
-A simple tensor library for deep learning workloads.
+`Tensor` is a C++ tensor runtime project that is moving toward a CPU-first,
+trainable core with Python bindings for flexible experimentation and testing.
 
-## Prerequisites
+The intended development style is:
 
-- CMake 3.20+
-- Ninja
-- GCC (recommended): GCC 11+ (tested with MinGW-w64 on Windows)
-- Python 3.11/3.12 (Interpreter + Development headers)
-- Optional: GoogleTest (comes as submodule), pybind11 (submodule or fetched)
+- C++ first
+- WSL/Linux first
+- `clang++` or `g++` builds through CMake + Ninja
+- pybind11 bindings for Python-side checks and quick experiments
 
-## Build
+## Current Focus
+
+The near-term goal is not to build a huge framework in one shot. The project is
+being shaped around a small, verifiable core:
+
+- runtime tensor storage and views
+- scalar tensor ops first
+- minimal reverse-mode autograd
+- a solid `Linear` path as the first trainable primitive
+- Python bindings to inspect behavior from scripts
+
+## Recommended Environment
+
+The recommended primary environment is WSL Ubuntu or native Linux.
+
+Suggested toolchain:
+
+- `clang++` as the main compiler
+- `g++` as a secondary compiler target
+- CMake + Ninja
+- Python 3 with development headers
+
+On Ubuntu/WSL, start with:
 
 ```bash
-# Recommended: use CMakePresets with Ninja + GCC
+sudo apt update
+sudo apt install -y \
+  build-essential \
+  cmake \
+  ninja-build \
+  git \
+  pkg-config \
+  python3 \
+  python3-dev \
+  python3-venv \
+  python3-pip
+```
+
+If you want a newer Clang than your distro default, install a versioned LLVM
+toolchain and then point CMake presets at explicit binaries such as
+`clang-20` / `clang++-20`.
+
+## Python Environment
+
+Python is mainly used here for:
+
+- binding smoke tests
+- numerical sanity checks
+- quick scripting around the C++ library
+
+Project-level Python packaging metadata now lives at the repository root, while
+the importable Python code and tests stay under `python/`.
+
+- `pyproject.toml`
+- `requirements/`
+- `python/tests/`
+- `python/tensor/`
+- `python/bindings.cpp`
+- `python/CMakeLists.txt`
+
+If you use `uv`, a practical flow is:
+
+```bash
+uv venv
+uv sync --dev
+uv pip install -e .
+```
+
+This installs the base Python tooling plus the default dev group, but does not
+pull `torch`. The editable install now performs a packaged native build through
+`pyproject.toml`, so `uv pip install -e .` builds and installs the local C++
+extension instead of relying only on an external CMake build tree.
+
+Extra groups:
+
+- `uv sync --dev --group bench` to add benchmark tooling
+- `uv sync --dev --group bench --group bench-torch` to add PyTorch-backed benchmark comparisons
+
+The grouped `pip` requirements are also available under `requirements/`
+for explicit layered installs.
+
+## Build Presets
+
+The repo currently exposes CMake presets for GCC and Clang builds.
+
+Example:
+
+```bash
 cmake --preset gcc-release
 cmake --build --preset build-gcc-release
 
-# Clang (experimental; unsupported on Windows MinGW for Python bindings)
 cmake --preset clang-release
 cmake --build --preset build-clang-release
 ```
 
-## Options
+Useful options:
 
 ```bash
--DTENSOR_ENABLE_TESTS=ON        # GoogleTest unit tests (ctest -L unit)
--DTENSOR_ENABLE_BENCHMARKS=ON   # Google Benchmark (run tensor_bench)
--DTENSOR_ENABLE_PYTHON=ON       # Build pybind11 module tensor_py
--DTENSOR_ENABLE_PYTEST=ON       # Add pytest target (requires Python)
+-DTENSOR_ENABLE_TESTS=ON
+-DTENSOR_ENABLE_BENCHMARKS=ON
+-DTENSOR_ENABLE_PYTHON=ON
+-DTENSOR_ENABLE_PYTEST=ON
 ```
 
-## Unit tests
+## Tests
+
+### C++ unit tests
 
 ```bash
 cmake --preset gcc-release-tests
@@ -39,7 +124,25 @@ cmake --build --preset build-gcc-release-tests
 ctest --preset test-gcc-release -j
 ```
 
-## Benchmarks
+### Python extension and pytest
+
+```bash
+cmake --preset gcc-release-pytest
+cmake --build --preset build-gcc-release-pytest --target tensor_py
+ctest --preset pytest-gcc-release
+```
+
+From the repository root, the packaged Python install can be exercised directly:
+
+```bash
+uv pip install -e .
+python -m pytest -q
+```
+
+Benchmark tests are separated from the normal Python test path and become active
+when benchmark dependencies are installed.
+
+### Benchmarks
 
 ```bash
 cmake --preset gcc-release -DTENSOR_ENABLE_BENCHMARKS=ON
@@ -47,60 +150,27 @@ cmake --build --preset build-gcc-release -DTENSOR_ENABLE_BENCHMARKS=ON
 ./build/gcc-release/tensor_bench
 ```
 
-## Python module and pytest
+## Repository Shape Today
 
-```bash
-# Build Python extension and run pytest (GCC)
-cmake --preset gcc-release-pytest
-cmake --build --preset build-gcc-release-pytest --target tensor_py
-ctest --preset pytest-gcc-release
-```
+The repo is in transition, but the current split is roughly:
 
-### Running pytest manually
+- `src/tensor/`: core C++ tensor code
+- `src/api/`: small public-facing helpers
+- `python/`: Python package code, bindings, and Python-side tests
+- `requirements/`: grouped Python dependency layers
+- `pyproject.toml`: project-level packaging and editable build entrypoint
+- `tests/unit/`: C++ tests
+- `tests/bench/`: C++ benchmarks
+- `python/tests/`: Python-side tests and benchmark comparisons
 
-From `python/` directory, a locally built module is auto-discovered by `tests/conftest.py`.
+The long-term direction is to keep the C++ runtime as the main product and use
+Python as a lightweight interface around it.
 
-```bash
-python -m pytest -q
-```
+## Windows Note
 
-Built artifact location (for reference): `build/<preset>/src/python/tensor_py.*.pyd` (Windows) or `.so` (Linux).
+Windows support is currently most comfortable through WSL for the Clang +
+Python-binding workflow.
 
-### Benchmarks (pytest)
-
-Run only benchmark tests and sort by mean (recommended view):
-
-```bash
-python -m pytest -q -k bench --benchmark-sort=mean
-```
-
-Optional, add compact names and useful columns:
-
-```bash
-python -m pytest -q -k bench \
-  --benchmark-name=short \
-  --benchmark-columns=median,min,max,mean,stddev \
-  --benchmark-sort=mean
-```
-
-Save and compare benchmark runs:
-
-```bash
-python -m pytest -q -k bench --benchmark-save=gcc
-python -m pytest -q -k bench --benchmark-compare --benchmark-compare-fail=mean:5%
-```
-
-## Windows
-
-- Recommended toolchain: GCC via MSYS2 MinGW-w64 + Ninja.
-- The Python extension links libstdc++/libgcc statically under GCC to avoid missing DLLs.
-- PyTest via CTest sets `PYTHONPATH` and augments `PATH` so the module and runtime DLLs are discoverable.
-- Clang with MinGW on Windows is currently unsupported for the Python binding due to libstdc++/winpthread link issues. Use GCC or WSL.
-- On WSL, run the same Linux commands above.
-
-## Troubleshooting
-
-- ImportError: DLL load failed when importing `tensor_py` on Windows
-  - Ensure you built with the GCC presets above.
-  - Run tests via `ctest --preset pytest-gcc-release` or from `python/` directory (`conftest.py` adjusts paths automatically).
-  - If running Python outside CTest and `python/`, add `build/<preset>/src/python` to `PYTHONPATH`.
+MinGW/GCC on Windows can still be useful, but WSL is the preferred path if you
+want a cleaner Linux-like build, newer Clang, and fewer Python extension
+surprises.

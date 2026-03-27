@@ -56,6 +56,8 @@ endif()
 
 add_library(tensor STATIC
     src/tensor/Tensor.cpp
+    src/tensor/Ops.cpp
+    src/tensor/Linear.cpp
     src/api/Api.hpp
 )
 
@@ -86,7 +88,7 @@ endif()
 
 # Python bindings
 if (TENSOR_ENABLE_PYTHON)
-    add_subdirectory(src/python)
+    add_subdirectory(python)
 endif()
 
 # Pytest convenience target

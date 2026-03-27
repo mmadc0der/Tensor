@@ -1,0 +1,3 @@
+# Compatibility entrypoint for tools that still expect a flat requirements file.
+# The grouped requirements under `requirements/` are the canonical source.
+-r requirements/cpu-dev.txt

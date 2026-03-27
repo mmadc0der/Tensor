@@ -1,0 +1,47 @@
+[build-system]
+requires = [
+    "scikit-build-core>=0.10",
+    "pybind11>=2.12",
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "tensor"
+version = "0.2.0.dev1"
+description = "Python packaging and editable builds for the Tensor C++ project."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "packaging>=23.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.4",
+]
+bench = [
+    "pytest-benchmark>=4.0",
+]
+bench-torch = [
+    "torch>=2.9",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["python/tests"]
+markers = [
+    "integration: integration coverage for the local Python bindings",
+    "benchmark: benchmark-oriented comparisons and performance probes",
+]
+
+[tool.scikit-build]
+cmake.source-dir = "."
+build-dir = "build/{wheel_tag}"
+wheel.packages = ["python/tensor"]
+editable.mode = "redirect"
+
+[tool.scikit-build.cmake.define]
+TENSOR_ENABLE_PYTHON = "ON"
+TENSOR_ENABLE_PYTEST = "OFF"
+TENSOR_ENABLE_TESTS = "OFF"
+TENSOR_ENABLE_BENCHMARKS = "OFF"

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-import tensor_py as T
+import tensor as T
 
 
 @pytest.mark.integration

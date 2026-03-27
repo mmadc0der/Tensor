@@ -1,0 +1,2 @@
+-r cpu-dev.txt
+pytest-benchmark>=4.0
