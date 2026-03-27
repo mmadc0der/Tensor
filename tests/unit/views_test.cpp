@@ -21,4 +21,13 @@ TEST(Views, PermuteBasic) {
     EXPECT_EQ(p.shape()[2], 2);
 }
 
+TEST(Views, ReshapePreservesAutogradState) {
+    auto t = Tensor::api::zeros<float>({2, 3}, true);
+    auto reshaped = Tensor::api::reshape(t.as_dtensor(), {3, 2});
+
+    EXPECT_TRUE(reshaped.requires_grad());
+    EXPECT_TRUE(reshaped.is_leaf());
+    EXPECT_EQ(reshaped.numel(), t.numel());
+}
+
 

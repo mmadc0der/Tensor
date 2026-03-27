@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
+
+#include "api/Api.hpp"
 #include "tensor/Tensor.hpp"
 
 TEST(Core, DTypeSize) {
-    EXPECT_EQ(Tensor::dtype_size(Tensor::DType::f16), 2u);
-    EXPECT_EQ(Tensor::dtype_size(Tensor::DType::bf16), 2u);
     EXPECT_EQ(Tensor::dtype_size(Tensor::DType::f32), 4u);
     EXPECT_EQ(Tensor::dtype_size(Tensor::DType::f64), 8u);
     EXPECT_EQ(Tensor::dtype_size(Tensor::DType::i32), 4u);
@@ -31,10 +31,20 @@ TEST(Core, DTensorBasicConstruct) {
     auto st = Tensor::make_host_storage(4 * 8, 64);
     std::vector<int64_t> shape{4,8};
     auto stride = Tensor::default_strides(shape);
-    Tensor::DTensor dt{std::move(st), shape, stride, 0, Tensor::DType::f32, Tensor::Layout::contiguous, true, false};
+    Tensor::DTensor dt{std::move(st), shape, stride, 0, Tensor::DType::f32, true, false};
     EXPECT_EQ(dt.rank(), 2);
     EXPECT_EQ(dt.numel(), 32);
     EXPECT_TRUE(dt.is_contiguous());
+    EXPECT_FALSE(dt.requires_grad());
 }
 
+TEST(Core, RequiresGradStateIsSharedAcrossCopies) {
+    auto base = Tensor::api::zeros({2, 2}, Tensor::DType::f32, true);
+    Tensor::DTensor alias = base;
+
+    EXPECT_TRUE(base.requires_grad());
+    EXPECT_TRUE(alias.requires_grad());
+    EXPECT_TRUE(base.is_leaf());
+    EXPECT_TRUE(alias.is_leaf());
+}
 

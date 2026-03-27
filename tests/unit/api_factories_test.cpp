@@ -26,4 +26,10 @@ TEST(Api, ZerosOnesEmpty) {
     }
 }
 
+TEST(Api, FactoriesCanCreateTrainableTensor) {
+    auto t = Tensor::api::zeros<float>({2, 2}, true);
+    EXPECT_TRUE(t.requires_grad());
+    EXPECT_TRUE(t.as_dtensor().is_leaf());
+}
+
 

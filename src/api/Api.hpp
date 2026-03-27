@@ -1,158 +1,91 @@
 #pragma once
 
 #include "tensor/Tensor.hpp"
+
 #include <cstdint>
 #include <cstring>
 #include <vector>
 
 namespace Tensor::api {
 
-// Create a scalar tensor on host and initialize with value
 template <typename T> Tensor<T> make_scalar(const T &value) {
-  // allocate 1 element host storage
-  auto st = make_host_storage(sizeof(T), 64);
-  std::vector<int64_t> shp{1};
-  auto str = default_strides(shp);
-  DTensor dt{std::move(st), std::move(shp), std::move(str),
-             /*offset*/ 0,
-             // map dtype via Tensor<T>
-             [] {
-               if constexpr (std::is_same_v<T, int>)
-                 return DType::i32;
-               else if constexpr (std::is_same_v<T, std::int32_t>)
-                 return DType::i32;
-               else if constexpr (std::is_same_v<T, std::int64_t>)
-                 return DType::i64;
-               else if constexpr (std::is_same_v<T, float>)
-                 return DType::f32;
-               else if constexpr (std::is_same_v<T, double>)
-                 return DType::f64;
-               else
-                 return DType::f32;
-             }(),
-             Layout::contiguous,
-             /*is_contiguous*/ true,
-             /*requires_grad*/ false};
-  // write the value
-  *static_cast<T *>(dt.data()) = value;
-  return Tensor<T>(std::move(dt));
+  auto storage = make_host_storage(sizeof(T), 64);
+  std::vector<int64_t> shape{1};
+  DTensor tensor(std::move(storage), shape, default_strides(shape), 0, dtype_of<T>(),
+                 true, false);
+  *static_cast<T *>(tensor.data()) = value;
+  return Tensor<T>(std::move(tensor));
 }
 
-// Create uninitialized contiguous DTensor on host
-inline DTensor empty(const std::vector<int64_t> &shape, DType dtype) {
-  const std::size_t elem = dtype_size(dtype);
-  std::size_t bytes = elem;
-  for (auto d : shape)
-    bytes *= static_cast<std::size_t>(d);
-  auto st = make_host_storage(bytes, 64);
-  auto str = default_strides(shape);
-  DTensor dt{std::move(st),          shape, std::move(str),
-             /*offset*/ 0,           dtype, Layout::contiguous,
-             /*is_contiguous*/ true,
-             /*requires_grad*/ false};
-  return dt;
+inline DTensor empty(const std::vector<int64_t> &shape, DType dtype,
+                     bool requires_grad = false) {
+  const auto bytes = static_cast<std::size_t>(numel_from_shape(shape)) * dtype_size(dtype);
+  return DTensor(make_host_storage(bytes, 64), shape, default_strides(shape), 0,
+                 dtype, true, requires_grad);
 }
 
-// Create zero-initialized DTensor on host
-inline DTensor zeros(const std::vector<int64_t> &shape, DType dtype) {
-  DTensor dt = empty(shape, dtype);
-  std::memset(dt.data(), 0, dt.storage()->size_bytes());
-  return dt;
-}
-
-// Typed factories
-template <typename T>
-inline Tensor<T> empty(const std::vector<int64_t> &shape) {
-  DTensor dt = empty(shape, [] {
-    if constexpr (std::is_same_v<T, int>)
-      return DType::i32;
-    else if constexpr (std::is_same_v<T, std::int32_t>)
-      return DType::i32;
-    else if constexpr (std::is_same_v<T, std::int64_t>)
-      return DType::i64;
-    else if constexpr (std::is_same_v<T, float>)
-      return DType::f32;
-    else if constexpr (std::is_same_v<T, double>)
-      return DType::f64;
-    else
-      return DType::f32;
-  }());
-  return Tensor<T>(std::move(dt));
+inline DTensor zeros(const std::vector<int64_t> &shape, DType dtype,
+                     bool requires_grad = false) {
+  DTensor tensor = empty(shape, dtype, requires_grad);
+  std::memset(tensor.data(), 0, static_cast<std::size_t>(tensor.numel()) * dtype_size(dtype));
+  return tensor;
 }
 
 template <typename T>
-inline Tensor<T> zeros(const std::vector<int64_t> &shape) {
-  DTensor dt = zeros(shape, [] {
-    if constexpr (std::is_same_v<T, int>)
-      return DType::i32;
-    else if constexpr (std::is_same_v<T, std::int32_t>)
-      return DType::i32;
-    else if constexpr (std::is_same_v<T, std::int64_t>)
-      return DType::i64;
-    else if constexpr (std::is_same_v<T, float>)
-      return DType::f32;
-    else if constexpr (std::is_same_v<T, double>)
-      return DType::f64;
-    else
-      return DType::f32;
-  }());
-  return Tensor<T>(std::move(dt));
+inline Tensor<T> empty(const std::vector<int64_t> &shape, bool requires_grad = false) {
+  return Tensor<T>(empty(shape, dtype_of<T>(), requires_grad));
 }
 
-template <typename T> inline Tensor<T> ones(const std::vector<int64_t> &shape) {
-  Tensor<T> t = empty<T>(shape);
-  T *p = t.data();
-  for (int64_t i = 0, n = t.numel(); i < n; ++i)
-    p[i] = T{1};
-  return t;
+template <typename T>
+inline Tensor<T> zeros(const std::vector<int64_t> &shape, bool requires_grad = false) {
+  return Tensor<T>(zeros(shape, dtype_of<T>(), requires_grad));
 }
 
-// Helpers
-inline bool is_contiguous(const DTensor &t) {
-  const auto &shp = t.shape();
-  const auto &str = t.stride();
-  auto def = default_strides(shp);
-  return def == str;
+template <typename T>
+inline Tensor<T> ones(const std::vector<int64_t> &shape, bool requires_grad = false) {
+  Tensor<T> tensor = empty<T>(shape, requires_grad);
+  T *ptr = tensor.data();
+  for (int64_t index = 0; index < tensor.numel(); ++index) {
+    ptr[index] = T{1};
+  }
+  return tensor;
 }
 
-// View ops
-inline DTensor reshape(const DTensor &t,
-                       const std::vector<int64_t> &new_shape) {
-  // Only allow reshape without copy if tensor is contiguous and numel matches
-  int64_t old_n = t.numel();
-  int64_t new_n = 1;
-  for (auto d : new_shape)
-    new_n *= d;
-  assert(old_n == new_n && "reshape: numel mismatch");
-  assert(is_contiguous(t) &&
-         "reshape: only contiguous tensors supported for now");
-  auto ns = default_strides(new_shape);
-  DTensor out{t.storage(), new_shape,  std::move(ns), t.offset(),
-              t.dtype(),   t.layout(), true,          t.requires_grad()};
-  out.set_grad_fn(t.grad_fn());
-  return out;
+inline bool is_contiguous(const DTensor &tensor) {
+  return is_default_contiguous(tensor.shape(), tensor.stride());
 }
 
-inline DTensor permute(const DTensor &t, const std::vector<int> &perm) {
-  assert(static_cast<int>(perm.size()) == t.rank());
+inline DTensor reshape(const DTensor &tensor, const std::vector<int64_t> &new_shape) {
+  if (!is_contiguous(tensor)) {
+    throw std::invalid_argument("reshape only supports contiguous tensors");
+  }
+  if (tensor.numel() != numel_from_shape(new_shape)) {
+    throw std::invalid_argument("reshape requires the same element count");
+  }
+  return DTensor(tensor.storage(), new_shape, default_strides(new_shape), tensor.offset(),
+                 tensor.dtype(), true, tensor.requires_grad(),
+                 tensor.autograd_state());
+}
+
+inline DTensor permute(const DTensor &tensor, const std::vector<int> &perm) {
+  if (static_cast<int>(perm.size()) != tensor.rank()) {
+    throw std::invalid_argument("permute rank mismatch");
+  }
+
   std::vector<int64_t> new_shape(perm.size());
   std::vector<int64_t> new_stride(perm.size());
-  for (size_t i = 0; i < perm.size(); ++i) {
-    int p = perm[i];
-    assert(p >= 0 && p < t.rank());
-    new_shape[i] = t.shape()[p];
-    new_stride[i] = t.stride()[p];
+  for (std::size_t index = 0; index < perm.size(); ++index) {
+    const int axis = perm[index];
+    if (axis < 0 || axis >= tensor.rank()) {
+      throw std::invalid_argument("permute axis out of range");
+    }
+    new_shape[index] = tensor.shape()[static_cast<std::size_t>(axis)];
+    new_stride[index] = tensor.stride()[static_cast<std::size_t>(axis)];
   }
-  DTensor out{t.storage(),
-              std::move(new_shape),
-              std::move(new_stride),
-              t.offset(),
-              t.dtype(),
-              t.layout(),
-              false,
-              t.requires_grad()};
-  out.set_grad_fn(t.grad_fn());
-  return out;
+
+  return DTensor(tensor.storage(), std::move(new_shape), std::move(new_stride),
+                 tensor.offset(), tensor.dtype(), false, tensor.requires_grad(),
+                 tensor.autograd_state());
 }
 
 } // namespace Tensor::api
