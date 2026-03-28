@@ -25,8 +25,17 @@ if (TENSOR_ENABLE_TESTS OR TENSOR_ENABLE_PYTEST)
 endif()
 
 if (TENSOR_ENABLE_TESTS)
-    # Expect googletest available as a submodule under external/googletest
-    add_subdirectory(external/googletest)
+    # Prefer a local submodule, but allow clean checkouts to fetch GTest on demand.
+    if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/external/googletest/CMakeLists.txt)
+        add_subdirectory(external/googletest)
+    else()
+        FetchContent_Declare(
+            googletest
+            URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+        )
+        FetchContent_MakeAvailable(googletest)
+    endif()
 endif()
 
 if (TENSOR_ENABLE_BENCHMARKS)
@@ -34,6 +43,7 @@ if (TENSOR_ENABLE_BENCHMARKS)
     FetchContent_Declare(
         googlebenchmark
         URL https://github.com/google/benchmark/archive/refs/tags/v1.8.3.zip
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     )
     set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
     set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "" FORCE)
@@ -48,6 +58,7 @@ if (TENSOR_ENABLE_PYTHON)
         FetchContent_Declare(
             pybind11
             URL https://github.com/pybind/pybind11/archive/refs/tags/v2.12.0.zip
+            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
         )
         FetchContent_MakeAvailable(pybind11)
     endif()

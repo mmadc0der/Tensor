@@ -91,6 +91,28 @@ Extra groups:
 The grouped `pip` requirements are also available under `requirements/`
 for explicit layered installs.
 
+## Verification Gates
+
+The repo now has three named verification gates:
+
+- `fast`: primary toolchain plus packaged Python tests
+- `full`: GCC and Clang correctness checks plus packaged Python tests
+- `release`: `full` plus a clean wheel-install smoke outside the repo tree
+
+WSL/Linux helper scripts live under `scripts/`:
+
+```bash
+bash scripts/verify-fast.sh
+bash scripts/verify-full.sh
+bash scripts/verify-release.sh
+```
+
+`verify-full.sh` and `verify-release.sh` expect `clang++` to be available in
+the active WSL/Linux environment.
+
+The detailed command matrix, pass criteria, package smoke workflow, and
+feature-based release roadmap live in `docs/verification.md`.
+
 ## Build Presets
 
 The repo currently exposes CMake presets for GCC and Clang builds.
@@ -136,11 +158,20 @@ From the repository root, the packaged Python install can be exercised directly:
 
 ```bash
 uv pip install -e .
-python -m pytest -q
+uv run python -m pytest -q -m "not benchmark"
 ```
 
 Benchmark tests are separated from the normal Python test path and become active
 when benchmark dependencies are installed.
+
+To verify the installed package outside the repository tree:
+
+```bash
+bash scripts/package-smoke.sh
+```
+
+This builds a wheel, installs it into a fresh temporary environment, and runs
+`examples/python/package_smoke.py` from outside the project directory.
 
 ### Benchmarks
 
@@ -165,6 +196,18 @@ The repo is in transition, but the current split is roughly:
 
 The long-term direction is to keep the C++ runtime as the main product and use
 Python as a lightweight interface around it.
+
+## Version Roadmap
+
+Version lines are intended to represent stable capabilities, not just process:
+
+- `0.2.x`: stable dense core centered on `matmul`
+- `0.3.x`: minimal trainable path with autograd, `Linear`, one loss, and `SGD`
+- `0.4.x`: reliable package usability outside the source tree
+- `0.5.x`: careful model-building expansion beyond `Linear`
+
+The detailed feature gates for each line are documented in
+`docs/verification.md`.
 
 ## Windows Note
 

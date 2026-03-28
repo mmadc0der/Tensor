@@ -1,0 +1,34 @@
+---
+description: Repo-wide verification workflow and release gates
+alwaysApply: true
+---
+
+# Verification Workflow
+
+- Treat verification as part of implementation, not an afterthought.
+- Keep WSL/Linux as the canonical verification environment unless the task specifically targets another platform.
+- Treat installed-package validation as a required part of Python-facing work, not just source-tree pytest.
+- Use a tiered verification mindset:
+  - `fast` for normal development changes
+  - `full` before risky handoff or merge
+  - `release` before tagging a release
+- Use `docs/verification.md` as the concrete example of how verification should be executed in practice.
+
+# Package Smoke
+
+- When Python packaging, bindings, or install behavior changes, verify the package outside the repo tree.
+- The consumer smoke example is `examples/python/package_smoke.py`; keep it representative of real package usage.
+- Do not rely only on `python/tests/conftest.py` build-tree discovery when validating packaging behavior.
+
+# Feature-Based Releases
+
+- Version lines should describe stable capabilities, not just process.
+- `0.2.x` centers on a stable dense core with trustworthy `matmul`.
+- `0.3.x` centers on the first dependable trainable path: autograd, `Linear`, one loss, and `SGD`.
+- `0.4.x` centers on reliable package usability outside the source tree.
+- `0.5.x` centers on careful model-building expansion beyond `Linear`.
+
+# Maintenance Notes
+
+- Keep verification guidance aligned with `docs/verification.md` and `README.md`.
+- If a verification gate cannot run because a prerequisite is missing, make that failure explicit in the documentation or in the agent response.
